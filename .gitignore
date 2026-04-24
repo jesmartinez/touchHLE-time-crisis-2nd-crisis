@@ -1,5 +1,6 @@
 /target
-/vendor/boost
+/vendor
+.unzipped-apps
 /touchHLE_sandbox
 /touchHLE_apps/*.ipa
 /touchHLE_apps/*.app
@@ -31,3 +32,4 @@ android/build
 # Default developer dump file
 
 DUMP.txt
+.ai_context
