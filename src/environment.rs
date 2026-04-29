@@ -456,30 +456,37 @@ impl Environment {
                     env.cpu.regs_mut()[Cpu::SP] = 0xFFFFF000;
                     // Static initializers for libraries must be run before
                     // the initializer in the app binary.
-                    for bin_idx in env.get_sorted_bin_indices().unwrap() {
-                        let Some(bin) = env.bins.get(bin_idx) else {
-                            continue;
-                        };
-                        let Some(section) =
-                            bin.get_section(mach_o::SectionType::ModInitFuncPointers)
-                        else {
-                            continue;
-                        };
+for bin_idx in env.get_sorted_bin_indices().unwrap() {
+    let Some(bin) = env.bins.get(bin_idx) else {
+        continue;
+    };
 
-                        log_dbg!("Calling static initializers for {:?}", bin.name);
-                        assert!(section.size % 4 == 0);
-                        let base: mem::ConstPtr<abi::GuestFunction> =
-                            mem::Ptr::from_bits(section.addr);
-                        let count = section.size / 4;
-                        for i in 0..count {
-                            let func = env.mem.read(base + i);
-                            log_dbg!(
-                                "Calling static initializer at {:?} from {:?}",
-                                func,
-                                (base + i)
-                            );
-                            () = func.call_from_host(env, ());
-                        }
+    // HOTFIX: Saltar todos los inicializadores estáticos de libstdc++.6.dylib
+    if bin.name == "libstdc++.6.dylib" {
+        log!("Skipping all static initializers for libstdc++.6.dylib");
+        continue;
+    }
+
+    let Some(section) =
+        bin.get_section(mach_o::SectionType::ModInitFuncPointers)
+    else {
+        continue;
+    };
+
+    log_dbg!("Calling static initializers for {:?}", bin.name);
+    assert!(section.size % 4 == 0);
+    let base: mem::ConstPtr<abi::GuestFunction> =
+        mem::Ptr::from_bits(section.addr);
+    let count = section.size / 4;
+    for i in 0..count {
+        let func = env.mem.read(base + i);
+        log_dbg!(
+            "Calling static initializer at {:?} from {:?}",
+            func,
+            (base + i)
+        );
+        () = func.call_from_host(env, ());
+    }
                         log_dbg!("Static initialization done");
                     }
 

@@ -391,6 +391,7 @@ pub struct GLES1OnGL2State {
     pointer_is_fixed_point: [bool; ARRAYS.len()],
     fixed_point_texture_units: HashSet<GLenum>,
     fixed_point_translation_buffers: [Vec<GLfloat>; ARRAYS.len()],
+    scratch_vbo: GLuint,
 }
 
 pub struct GLES1OnGL2Context {
@@ -410,6 +411,7 @@ impl GLESContext for GLES1OnGL2Context {
                 pointer_is_fixed_point: [false; ARRAYS.len()],
                 fixed_point_texture_units: HashSet::new(),
                 fixed_point_translation_buffers: [Vec::new(), Vec::new(), Vec::new(), Vec::new()],
+                scratch_vbo: 0,
             },
             is_loaded: false,
         })
@@ -683,6 +685,9 @@ impl GLES for GLES1OnGL2<'_> {
     unsafe fn GetError(&mut self) -> GLenum {
         gl21::GetError()
     }
+    unsafe fn get_scratch_vbo(&mut self) -> GLuint {
+        self.state.scratch_vbo
+    }
     unsafe fn Enable(&mut self, cap: GLenum) {
         if ARRAYS.iter().any(|&ArrayInfo { name, .. }| name == cap) {
             log_dbg!("Tolerating glEnable({:#x}) of client state", cap);
@@ -690,6 +695,7 @@ impl GLES for GLES1OnGL2<'_> {
             || cap == gl21::SMOOTH
             || cap == gl21::BLEND_EQUATION
             || cap == gl21::TEXTURE
+            || cap == 0x8840
         {
             log_dbg!("Tolerating glEnable({:#x})", cap);
         } else {
@@ -713,7 +719,7 @@ impl GLES for GLES1OnGL2<'_> {
             log_dbg!("Tolerating glDisable({:#x}) of client state", cap);
         } else if UNSUPPORTED_CAPABILITIES.contains(&cap) {
             log_dbg!("Tolerating glDisable({:#x}) of unsupported capability", cap);
-        } else if GET_PARAMS.contains(cap) || UNSUPPORTED_GET_PARAMS.contains(cap) {
+        } else if GET_PARAMS.contains(cap) || UNSUPPORTED_GET_PARAMS.contains(cap) || cap == 0x8840 {
             log_dbg!("Tolerating glDisable({:#x}) of parameter", cap);
         } else {
             panic!("Unexpected glDisable({cap:#x})");
@@ -729,7 +735,12 @@ impl GLES for GLES1OnGL2<'_> {
                 "Tolerating glEnableClientState({:#x}) of a capability",
                 array
             );
+        } else if array == 0x8844 || array == 0x86ad {
+            log_dbg!("Tolerating glEnableClientState({:#x})", array);
         } else {
+            if !ARRAYS.iter().any(|&ArrayInfo { name, .. }| name == array) {
+                log!("ERROR: EnableClientState called with unknown array: {:#x}", array);
+            }
             assert!(ARRAYS.iter().any(|&ArrayInfo { name, .. }| name == array));
         }
         gl21::EnableClientState(array);
@@ -740,10 +751,14 @@ impl GLES for GLES1OnGL2<'_> {
                 "Tolerating glDisableClientState({:#x}) of a capability",
                 array
             );
+        } else if array == 0x8844 || array == 0x86ad {
+            log_dbg!("Tolerating glDisableClientState({:#x})", array);
+        } else if ARRAYS.iter().any(|&ArrayInfo { name, .. }| name == array) {
+            gl21::DisableClientState(array);
         } else {
-            assert!(ARRAYS.iter().any(|&ArrayInfo { name, .. }| name == array));
+            log!("ERROR: glDisableClientState called with unknown array: {:#x}", array);
+            panic!("Unexpected glDisableClientState({:#x})", array);
         }
-        gl21::DisableClientState(array);
     }
     unsafe fn GetBooleanv(&mut self, pname: GLenum, params: *mut GLboolean) {
         let (type_, _count) = GET_PARAMS.get_type_info(pname);
@@ -1304,6 +1319,27 @@ impl GLES for GLES1OnGL2<'_> {
             self.state.pointer_is_fixed_point[3] = false;
             gl21::VertexPointer(size, type_, stride, pointer)
         }
+    }
+    unsafe fn WeightPointerOES(
+        &mut self,
+        _size: GLint,
+        _type_: GLenum,
+        _stride: GLsizei,
+        _pointer: *const GLvoid,
+    ) {
+        log_dbg!("WeightPointerOES called");
+    }
+    unsafe fn MatrixIndexPointerOES(
+        &mut self,
+        _size: GLint,
+        _type_: GLenum,
+        _stride: GLsizei,
+        _pointer: *const GLvoid,
+    ) {
+        log_dbg!("MatrixIndexPointerOES called");
+    }
+    unsafe fn CurrentPaletteMatrixOES(&mut self, _matrixpaletteindex: GLint) {
+        log_dbg!("CurrentPaletteMatrixOES called");
     }
 
     // Drawing
@@ -1922,6 +1958,10 @@ impl GLES for GLES1OnGL2<'_> {
 
     // Matrix stack operations
     unsafe fn MatrixMode(&mut self, mode: GLenum) {
+        if mode == 0x8840 {
+            log_dbg!("Tolerating MatrixMode({:#x})", mode);
+            return;
+        }
         assert!(mode == gl21::MODELVIEW || mode == gl21::PROJECTION || mode == gl21::TEXTURE);
         gl21::MatrixMode(mode);
     }

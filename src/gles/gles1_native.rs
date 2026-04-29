@@ -100,6 +100,9 @@ impl GLES for GLES1Native<'_> {
     unsafe fn GetError(&mut self) -> GLenum {
         gles11::GetError()
     }
+    unsafe fn get_scratch_vbo(&mut self) -> GLuint {
+        0
+    }
     unsafe fn Enable(&mut self, cap: GLenum) {
         gles11::Enable(cap)
     }
@@ -391,6 +394,27 @@ impl GLES for GLES1Native<'_> {
         pointer: *const GLvoid,
     ) {
         gles11::VertexPointer(size, type_, stride, pointer)
+    }
+    unsafe fn WeightPointerOES(
+        &mut self,
+        size: GLint,
+        type_: GLenum,
+        stride: GLsizei,
+        pointer: *const GLvoid,
+    ) {
+        gles11::WeightPointerOES(size, type_, stride, pointer)
+    }
+    unsafe fn MatrixIndexPointerOES(
+        &mut self,
+        size: GLint,
+        type_: GLenum,
+        stride: GLsizei,
+        pointer: *const GLvoid,
+    ) {
+        gles11::MatrixIndexPointerOES(size, type_, stride, pointer)
+    }
+    unsafe fn CurrentPaletteMatrixOES(&mut self, matrixpaletteindex: GLint) {
+        gles11::CurrentPaletteMatrixOES(matrixpaletteindex.try_into().unwrap())
     }
 
     // Drawing

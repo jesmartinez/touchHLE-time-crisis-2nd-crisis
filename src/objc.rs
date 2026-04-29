@@ -110,6 +110,8 @@ const CONSTANTS: ConstantExports = &[
     // and avoids a linker error for the integration tests.
     ("__objc_empty_vtable", HostConstant::NullPtr),
     ("__objc_empty_cache", HostConstant::NullPtr),
+    ("__NSConcreteGlobalBlock", HostConstant::NullPtr),
+    ("__NSConcreteStackBlock", HostConstant::NullPtr),
 ];
 
 /// Block support is iOS 4+, but it seems like Block Runtime Helpers

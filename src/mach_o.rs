@@ -502,27 +502,26 @@ impl MachO {
                             is_64bit,
                             &mut cursor,
                         );
-                        assert_eq!(slide, 0); // TODO
-                        match sym {
-                            Some(Symbol::Undefined { name: Some(n), .. }) => {
-                                external_relocations.push((addr, String::from(n)));
-                            }
-                            Some(Symbol::Defined { entry, desc, .. }) => {
-                                // Apparently these are used for internal
-                                // (intra-binary) relocations, despite being
-                                // in the external section?
-                                //
-                                // Resolve them immediately, there is no value
-                                // in passing these on to Dyld.
-                                let addr = Ptr::from_bits(addr);
-                                let entry = entry as u32;
-                                let entry = if desc & N_ARM_THUMB_DEF != 0 {
-                                    entry | GuestFunction::THUMB_BIT
-                                } else {
-                                    entry
-                                };
-                                into_mem.write(addr, entry);
-                            }
+                            match sym {
+                                Some(Symbol::Undefined { name: Some(n), .. }) => {
+                                    external_relocations.push((addr, String::from(n)));
+                                }
+                                Some(Symbol::Defined { entry, desc, .. }) => {
+                                    // Apparently these are used for internal
+                                    // (intra-binary) relocations, despite being
+                                    // in the external section?
+                                    //
+                                    // Resolve them immediately, there is no value
+                                    // in passing these on to Dyld.
+                                    let addr = Ptr::from_bits(addr);
+                                    let entry = entry as u32;
+                                    let entry = if desc & N_ARM_THUMB_DEF != 0 {
+                                        entry | GuestFunction::THUMB_BIT
+                                    } else {
+                                        entry
+                                    };
+                                    into_mem.write(addr, entry.wrapping_add(slide));
+                                }
                             Some(Symbol::Prebound { name: Some(n), .. }) => {
                                 let ptr_ptr = Ptr::<u32, true>::from_bits(addr);
                                 into_mem.write(ptr_ptr, 0); // Clear prebinding.

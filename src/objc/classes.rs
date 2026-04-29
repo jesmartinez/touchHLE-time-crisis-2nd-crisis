@@ -290,49 +290,49 @@ macro_rules! objc_classes {
                     class_methods: &[
                         $(
                             (
-                                $crate::objc::selector!(
-                                    $(($cm_type1);)?
-                                    $cm_name
-                                    $($(, $($cm_namen)?)*)?
-                                ),
-                                $crate::_objc_method!(
-                                    $env,
-                                    $this,
-                                    $_cmd,
-                                    $cm_name,
-                                    $cm_type,
-                                    { $cm_block }
-                                    $(, $cm_type1, $cm_arg1 $(, $cm_typen, $cm_argn)*)?
-                                    $(, ...$cm_va_arg: $crate::abi::DotDotDot)?
-                                )
-                            )
-                        ),*
-                    ],
-                    instance_methods: &[
-                        $(
-                            (
-                                $crate::objc::selector!(
-                                    $(($im_type1);)?
-                                    $im_name
-                                    $($(, $($im_namen)?)*)?
-                                ),
-                                $crate::_objc_method!(
-                                    $env,
-                                    $this,
-                                    $_cmd,
-                                    $im_name,
-                                    $im_type,
-                                    { $im_block }
-                                    $(, $im_type1, $im_arg1 $(, $im_typen, $im_argn)*)?
-                                    $(, ...$im_va_arg: $crate::abi::DotDotDot)?
-                                )
-                            )
-                        ),*
-                    ],
-                })
-            }),+
-        ]
-    }
+                                 $crate::objc::selector!(
+                                     $(($cm_type1);)?
+                                     $cm_name
+                                     $($(, $($cm_namen)?)*)?
+                                 ),
+                                 $crate::_objc_method!(
+                                     $env,
+                                     $this,
+                                     $_cmd,
+                                     $cm_name,
+                                     $cm_type,
+                                     { $cm_block }
+                                     $(, $cm_type1, $cm_arg1 $(, $cm_typen, $cm_argn)*)?
+                                     $(, ...$cm_va_arg: $crate::abi::DotDotDot)?
+                                 )
+                             )
+                         ),*
+                     ],
+                     instance_methods: &[
+                         $(
+                             (
+                                 $crate::objc::selector!(
+                                     $(($im_type1);)?
+                                     $im_name
+                                     $($(, $($im_namen)?)*)?
+                                 ),
+                                 $crate::_objc_method!(
+                                     $env,
+                                     $this,
+                                     $_cmd,
+                                     $im_name,
+                                     $im_type,
+                                     { $im_block }
+                                     $(, $im_type1, $im_arg1 $(, $im_typen, $im_argn)*)?
+                                     $(, ...$im_va_arg: $crate::abi::DotDotDot)?
+                                 )
+                             )
+                         ),*
+                     ],
+                 })
+             }),+
+         ]
+     }
 }
 pub use crate::objc_classes; // #[macro_export] is weird...
 

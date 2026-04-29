@@ -54,8 +54,23 @@ fn objc_msgSend_inner(
     let orig_class = super2.unwrap_or_else(|| ObjC::read_isa(receiver, &env.mem));
     assert!(orig_class != nil);
 
-    // Traverse the chain of superclasses to find the method implementation.
+    let class_name = env.objc.get_class_name(orig_class);
+    if class_name == "AVAudioSession" {
+        log!("AVAudioSession dispatch: {}, orig_class: {:?}, receiver: {:?}", selector.as_str(&env.mem), orig_class, receiver);
+        // Debug: dump ALL registered classes and their methods
+        log!("Dumping all classes for debugging:");
+        for (name, class) in &env.objc.classes {
+            if let Some(host_object) = env.objc.get_host_object(*class) {
+                // downcast to ClassHostObject
+                if let Some(c) = host_object.as_any().downcast_ref::<super::ClassHostObject>() {
+                    let method_names: Vec<String> = c.methods.keys().map(|s| s.as_str(&env.mem).to_string()).collect();
+                    log!("Class: {}, Methods: {:?}", name, method_names);
+                }
+            }
+        }
+    }
 
+    // Traverse the chain of superclasses to find the method implementation.
     let mut class = orig_class;
     loop {
         if class == nil {

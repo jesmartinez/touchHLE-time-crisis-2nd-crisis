@@ -500,8 +500,18 @@ fn AudioFileStreamOpen(
     kAudioFileUnspecifiedError
 }
 
+pub fn ExtAudioFileOpenURL(
+    env: &mut Environment,
+    in_url: CFURLRef,
+    out_ext_audio_file: MutPtr<MutVoidPtr>,
+) -> OSStatus {
+    log!("TODO: ExtAudioFileOpenURL({:?}, {:?})", in_url, out_ext_audio_file);
+    -43 // kAudioFileFileNotFoundError
+}
+
 pub const FUNCTIONS: FunctionExports = &[
     export_c_func!(AudioFileOpenURL(_, _, _, _)),
+    export_c_func!(ExtAudioFileOpenURL(_, _)),
     export_c_func!(AudioFileGetPropertyInfo(_, _, _, _)),
     export_c_func!(AudioFileGetProperty(_, _, _, _)),
     export_c_func!(AudioFileReadBytes(_, _, _, _, _)),

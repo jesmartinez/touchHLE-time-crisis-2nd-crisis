@@ -571,6 +571,9 @@ unsafe fn present_renderbuffer(env: &mut Environment) {
     let renderbuffer: GLuint = get_int(gles, gles11::RENDERBUFFER_BINDING_OES) as _;
     let (width, height) = get_renderbuffer_size(gles);
 
+    // Instrumentación para verificar qué renderbuffer estamos presentando
+    log!("DEBUG: presentRenderbuffer: renderbuffer={:?}, width={}, height={}", renderbuffer, width, height);
+    
     // To avoid confusing the guest app, we need to be able to undo any
     // state changes we make.
     let old_framebuffer: GLuint = get_int(gles, gles11::FRAMEBUFFER_BINDING_OES) as _;
@@ -678,8 +681,10 @@ unsafe fn present_renderbuffer(env: &mut Environment) {
         tex_env_mode_arr.as_ptr().cast(),
     );
 
-    // Draw the quad
+    // Dibujar el quad
+    log!("DEBUG: presentRenderbuffer calling present_frame for renderbuffer={:?}", renderbuffer);
     present_frame(gles, viewport, rotation_matrix, virtual_cursor_visible_at);
+    log!("DEBUG: presentRenderbuffer present_frame returned");
 
     // Clean up the texture
     gles.DeleteTextures(1, &texture);

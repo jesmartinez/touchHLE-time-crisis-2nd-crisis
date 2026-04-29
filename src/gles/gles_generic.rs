@@ -88,6 +88,7 @@ pub trait GLES {
     unsafe fn GetTexEnviv(&mut self, target: GLenum, pname: GLenum, params: *mut GLint);
     unsafe fn GetTexEnvfv(&mut self, target: GLenum, pname: GLenum, params: *mut GLfloat);
     unsafe fn GetPointerv(&mut self, pname: GLenum, params: *mut *const GLvoid);
+    unsafe fn get_scratch_vbo(&mut self) -> GLuint;
     unsafe fn Hint(&mut self, target: GLenum, mode: GLenum);
     unsafe fn Finish(&mut self);
     unsafe fn Flush(&mut self);
@@ -204,6 +205,21 @@ pub trait GLES {
         stride: GLsizei,
         pointer: *const GLvoid,
     );
+    unsafe fn WeightPointerOES(
+        &mut self,
+        size: GLint,
+        type_: GLenum,
+        stride: GLsizei,
+        pointer: *const GLvoid,
+    );
+    unsafe fn MatrixIndexPointerOES(
+        &mut self,
+        size: GLint,
+        type_: GLenum,
+        stride: GLsizei,
+        pointer: *const GLvoid,
+    );
+    unsafe fn CurrentPaletteMatrixOES(&mut self, matrixpaletteindex: GLint);
 
     // Drawing
     unsafe fn DrawArrays(&mut self, mode: GLenum, first: GLint, count: GLsizei);

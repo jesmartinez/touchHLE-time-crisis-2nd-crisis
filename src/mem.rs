@@ -389,7 +389,13 @@ impl Mem {
         ptr: Ptr<u8, MUT>,
         count: GuestUSize,
     ) -> &[u8] {
-        &self.bytes()[ptr.to_bits() as usize..][..count as usize]
+        let bits = ptr.to_bits() as usize;
+        let len = self.bytes().len();
+        if bits + count as usize > len {
+             log!("PANIC: Access out of bounds! ptr={:?}, bits={:#x}, count={}, len={:#x}", ptr, bits, count, len);
+             panic!("Access out of bounds! ptr={:?}, bits={:#x}, count={}, len={:#x}", ptr, bits, count, len);
+        }
+        &self.bytes()[bits..][..count as usize]
     }
     /// Get a slice for reading or writing `count` bytes. This is the basic
     /// primitive for safe read-write memory access.
@@ -437,7 +443,10 @@ impl Mem {
         T: SafeRead,
     {
         let size = count.checked_mul(guest_size_of::<T>()).unwrap();
-        self.unchecked_bytes_at(ptr.cast(), size).as_ptr().cast()
+        let bytes = self.unchecked_bytes_at(ptr.cast(), size);
+        let host_ptr = bytes.as_ptr().cast();
+        log!("DEBUG: unchecked_ptr_at ptr={:?} (bits={:#x}), count={}, host_ptr={:?}", ptr, ptr.to_bits(), count, host_ptr);
+        host_ptr
     }
     /// Get a pointer for reading or writing to an array of `count` elements of
     /// type `T`. Only use this for interfacing with unsafe C-like APIs.
